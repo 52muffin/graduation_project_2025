@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "뉴스 신뢰도 표시",
+  "version": "1.0",
+  "description": "뉴스 기사의 신뢰도와 편향성을 표시하는 확장 프로그램",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  }
+}
