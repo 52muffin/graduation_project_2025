@@ -1,63 +1,63 @@
-(function () {
-    function insertInfoBox() {
-      // 1. 기존에 생성된 박스가 있다면 중복 삽입 방지
-      if (document.getElementById("news-trust-info")) return;
-  
-      // 2. 정보 박스 생성
-      const infoBox = document.createElement("div");
-      infoBox.id = "news-trust-info"; // 중복 방지 ID 추가
-      infoBox.style.position = "fixed"; // 페이지 스크롤에도 고정되도록 설정
-      infoBox.style.top = "0"; // 페이지의 최상단에 붙임
-      infoBox.style.left = "0"; // 좌측으로 정렬
-      infoBox.style.width = "100%"; // 전체 너비 차지
-      infoBox.style.background = "#fff4c2"; // 연한 노란색
-      infoBox.style.padding = "20px";
-      infoBox.style.borderBottom = "2px solid #ccc";
-      infoBox.style.display = "flex";
-      infoBox.style.justifyContent = "flex-start";
-      infoBox.style.alignItems = "center";
-      infoBox.style.fontSize = "16px";
-      infoBox.style.fontWeight = "bold";
-      infoBox.style.zIndex = "9999"; // 항상 위에 표시
-  
-      // 3. 신뢰도 및 편향성 텍스트 추가
-      const trustScore = document.createElement("span");
-      trustScore.innerHTML = `신뢰도 <span style="color: green;">83%</span>`;
-      trustScore.style.marginRight = "20px"; // 편향성 텍스트와 간격 추가
-  
-      const biasScore = document.createElement("span");
-      biasScore.innerHTML = `편향성 <span style="color: red;">46%</span>`;
-  
-      // 4. 상세 페이지 링크 추가
-      const detailLink = document.createElement("a");
-      detailLink.href = "#"; // 실제 상세 페이지 URL로 변경해야 함
-      detailLink.innerText = "상세페이지";
-      detailLink.style.color = "blue";
-      detailLink.style.cursor = "pointer";
-      //detailLink.style.textDecoration = "underline";
-      detailLink.style.marginLeft = "auto"; // 자동으로 왼쪽 여백을 채워 오른쪽으로 정렬
-      detailLink.style.marginRight = "40px"; // 오른쪽에 40px 여백 추가
-      detailLink.addEventListener("click", () => {
-        alert("상세 페이지로 이동합니다!");
-      });
-  
-      // 5. 요소 추가
-      infoBox.appendChild(trustScore);
-      infoBox.appendChild(biasScore);
-      infoBox.appendChild(detailLink);
-  
-      // 6. body의 첫 번째 자식 요소로 추가
-      document.body.prepend(infoBox);
-  
-      // 7. 기존 페이지의 내용을 아래로 밀어주기
-      document.body.style.marginTop = infoBox.offsetHeight + "px";
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "extract_article") {
+        let extractedData = {
+            press: "",    // 신문사
+            title: "",    // 기사 제목
+            reporter: "", // 기자명
+            date: "",     // 작성일
+            updated: "",  // 수정일
+            content: ""   // 기사 본문
+        };
+
+        // 📰 신문사 (언론사)
+        let pressElement = document.querySelector(".press_logo img, .press_logo");
+        if (pressElement) {
+            extractedData.press = pressElement.alt || pressElement.innerText.trim();
+        }
+
+        // 🏷️ 기사 제목
+        let titleElement = document.querySelector("h2#title_area, h1.media_end_headline, .article_title");
+        if (titleElement) {
+            extractedData.title = titleElement.innerText.trim();
+        }
+
+        // ✍ 기자명
+        let reporterElement = document.querySelector(".byline, .journalistcard_summary_name, .reporter");
+        if (reporterElement) {
+            extractedData.reporter = reporterElement.innerText.trim();
+        }
+
+        // 🗓 작성일
+        let dateElement = document.querySelector(".media_end_head_info_datestamp_bunch ._ARTICLE_DATE_TIME, .article_date");
+        if (dateElement) {
+            extractedData.date = dateElement.innerText.trim();
+        }
+
+        // 🔄 수정일 (있다면)
+        let updatedElement = document.querySelector(".media_end_head_info_datestamp_bunch ._ARTICLE_MODIFY_DATE_TIME, .article_modify");
+        if (updatedElement) {
+            extractedData.updated = updatedElement.innerText.trim();
+        }
+
+        // 📜 기사 본문
+        let contentElement = document.querySelector("#dic_area, .article_body, .news_end");
+        if (contentElement) {
+            extractedData.content = contentElement.innerText.trim();
+        }
+
+        // ❌ 데이터가 하나도 없을 경우
+        if (!extractedData.content) {
+            alert("추출할 기사 내용이 없습니다!");
+            return;
+        }
+
+        // ✅ 저장
+        chrome.storage.local.set({ extractedData }, () => {
+            if (chrome.runtime.lastError) {
+                alert("저장 중 오류가 발생했습니다!");
+            } else {
+                alert("기사 내용이 추출되었습니다!");
+            }
+        });
     }
-  
-    // 페이지 로딩이 끝난 후 실행
-    if (document.readyState === "complete") {
-      insertInfoBox();
-    } else {
-      window.addEventListener("load", insertInfoBox);
-    }
-  })();
-  
+});

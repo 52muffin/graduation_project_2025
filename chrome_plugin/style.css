@@ -1,0 +1,35 @@
+body {
+    width: 220px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    padding: 10px;
+}
+
+button {
+    width: 90px;
+    padding: 8px;
+    margin: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#extract {
+    background-color: blue;
+    color: white;
+}
+
+#details {
+    background-color: orange;
+    color: white;
+}
+
+#analyze {
+    background-color: green;
+    color: white;
+}
+
+#close {
+    background-color: red;
+    color: white;
+}
