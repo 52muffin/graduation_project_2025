@@ -1,4 +1,4 @@
-#zip 파일 내 JSON 읽어올 수 있게 수정. Batch Loss 값 변동이 커서 우선 batch_size 8로 수정 
+#zip 파일 내 JSON 읽어올 수 있게 수정. Batch Loss 값 변동이 커서 우선 batch_size 8로 수정 -> 16으로 수정
 import os
 import zipfile
 import json
@@ -71,7 +71,7 @@ data_list = extract_data_from_zip_folder(folder_path)
 print(f"Loaded {len(data_list)} data items.")
 
 dataset = CustomDataset(data_list, tokenizer)
-data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
+data_loader = DataLoader(dataset, batch_size=16, shuffle=True)
 
 # DataLoader 첫 배치 확인
 for batch in data_loader:
