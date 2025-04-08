@@ -1,0 +1,105 @@
+#zip 파일 내 JSON 읽어올 수 있게 수정. Batch Loss 값 변동이 커서 우선 batch_size 8로 수정 
+import os
+import zipfile
+import json
+import torch
+from transformers import BertModel, BertTokenizer
+from torch.utils.data import DataLoader, Dataset
+from torch.optim import Adam
+from torch.nn import CrossEntropyLoss
+
+# 모델과 토크나이저 불러오기
+model_name_or_path = "C:/model"  # BERT 모델 경로
+model = BertModel.from_pretrained(model_name_or_path, add_pooling_layer=False)
+tokenizer = BertTokenizer.from_pretrained(model_name_or_path)
+
+# 학습 모드로 설정
+model.train()
+
+# 커스텀 데이터셋 클래스
+class CustomDataset(Dataset):
+    def __init__(self, data_list, tokenizer):
+        self.data_list = data_list
+        self.tokenizer = tokenizer
+
+    def __len__(self):
+        return len(self.data_list)
+
+    def __getitem__(self, idx):
+        item = self.data_list[idx]
+        # JSON 구조에서 뉴스 내용과 레이블 추출
+        text = item.get('sourceDataInfo', {}).get('newsContent', "")
+        label = item.get('labeledDataInfo', {}).get('clickbaitClass', 0)  # Label 추출
+        encoded_input = self.tokenizer(
+            text,
+            return_tensors="pt",
+            padding="max_length",
+            truncation=True,
+            max_length=128
+        )
+        return {key: val.squeeze(0) for key, val in encoded_input.items()}, torch.tensor(label)
+
+# ZIP 파일에서 JSON 데이터 추출 함수
+def extract_data_from_zip_folder(folder_path):
+    data_list = []
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.zip'):
+                zip_path = os.path.join(root, file)
+                print(f"Processing ZIP file: {zip_path}")
+                with zipfile.ZipFile(zip_path, 'r') as zip_file:
+                    for file_name in zip_file.namelist():
+                        if file_name.endswith('.json'):
+                            with zip_file.open(file_name) as file:
+                                try:
+                                    json_data = json.load(file)  # JSON 데이터 로드
+                                    if isinstance(json_data, dict):  # 현재 JSON 구조는 dict
+                                        data_list.append(json_data)  # 데이터를 리스트에 추가
+                                    else:
+                                        print(f"Unexpected JSON format in file: {file_name}")
+                                except json.JSONDecodeError:
+                                    print(f"Error decoding JSON in file: {file_name}")
+    if not data_list:
+        print("No valid JSON data found. Check the folder and JSON file formats.")
+    return data_list
+
+# 학습 데이터 준비
+folder_path = r"C:\dataset\fishing\opendata\Training\labeling"
+data_list = extract_data_from_zip_folder(folder_path)
+
+# 데이터 크기 확인
+print(f"Loaded {len(data_list)} data items.")
+
+dataset = CustomDataset(data_list, tokenizer)
+data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
+
+# DataLoader 첫 배치 확인
+for batch in data_loader:
+    print("Sample batch:", batch)
+    break
+
+# 옵티마이저와 손실 함수 정의
+optimizer = Adam(model.parameters(), lr=5e-5)
+loss_fn = CrossEntropyLoss()
+
+# 학습 루프
+epochs = 3
+for epoch in range(epochs):
+    print(f"Epoch {epoch + 1}/{epochs} 시작")
+    for i, batch in enumerate(data_loader):
+        inputs, labels = batch
+        optimizer.zero_grad()
+
+        # 모델 출력
+        outputs = model(**inputs, return_dict=True)
+        logits = outputs.last_hidden_state[:, 0, :]  # [CLS] 토큰의 출력
+
+        # 손실 계산 및 출력
+        loss = loss_fn(logits, labels)
+        print(f"Batch {i + 1}: Loss = {loss.item()}")  # 손실 값 출력
+        loss.backward()
+        optimizer.step()
+
+    print(f"Epoch {epoch + 1}/{epochs} 완료")
+
+print("학습 완료!")
