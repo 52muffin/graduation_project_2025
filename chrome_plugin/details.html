@@ -1,23 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>추출된 기사 정보</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h2 { font-size: 18px; }
-        p { font-size: 14px; line-height: 1.5; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>상세 기사 및 분석</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      padding: 20px;
+    }
+    .left, .right {
+      width: 50%;
+      overflow-y: auto;
+    }
+    .right {
+      border-left: 1px solid #ccc;
+      padding-left: 20px;
+    }
+    h2 {
+      font-size: 18px;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .label {
+      font-weight: bold;
+      color: green;
+    }
+    .analyzed-item {
+      margin-bottom: 12px;
+    }
+  </style>
 </head>
 <body>
+  <div class="left">
     <h2 id="title"></h2>
     <p><strong>신문사:</strong> <span id="press"></span></p>
     <p><strong>기자:</strong> <span id="reporter"></span></p>
     <p><strong>작성일:</strong> <span id="date"></span></p>
     <p><strong>수정일:</strong> <span id="updated"></span></p>
-    <hr>
+    <hr />
     <p id="content"></p>
-    <script src="details.js"></script>
+  </div>
+  <div class="right">
+    <h3>문장 유형 분석 결과</h3>
+    <div id="analysis"></div>
+  </div>
+  <script src="details.js"></script>
 </body>
 </html>

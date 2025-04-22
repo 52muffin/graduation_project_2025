@@ -20,8 +20,11 @@ document.getElementById("analyze").addEventListener("click", () => {
             })
             .then(res => res.json())
             .then(data => {
-                alert("서버 응답: " + JSON.stringify(data));
-            })
+                // 서버 응답 저장
+                chrome.storage.local.set({ analysisResult: data.analyzed }, () => {
+                  alert("분석 완료! 상세페이지에서 확인하세요.");
+                });
+              })              
             .catch(err => {
                 alert("전송 중 에러 발생: " + err);
             });
